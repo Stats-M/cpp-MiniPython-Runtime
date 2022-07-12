@@ -15,10 +15,13 @@ class Context
 public:
     // Возвращает поток вывода для команд print
     virtual std::ostream& GetOutputStream() = 0;
+    // Объявите, если потребуется поток ввода (напр., пользовательский ввод)
+    //virtual std::istream& GetInputStream() = 0;
 
 protected:
     ~Context() = default;
 };
+
 
 // Базовый класс для всех объектов языка Mython
 class Object
@@ -28,6 +31,7 @@ public:
     // выводит в os своё представление в виде строки
     virtual void Print(std::ostream& os, Context& context) = 0;
 };
+
 
 // Специальный класс-обёртка, предназначенный для хранения объекта в Mython-программе
 class ObjectHolder
@@ -76,6 +80,7 @@ private:
     std::shared_ptr<Object> data_;
 };
 
+
 // Объект-значение, хранящий значение типа T
 template <typename T>
 class ValueObject : public Object
@@ -106,6 +111,7 @@ using Closure = std::unordered_map<std::string, ObjectHolder>;
 // Для отличных от нуля чисел, True и непустых строк возвращается true. В остальных случаях - false.
 bool IsTrue(const ObjectHolder& object);
 
+
 // Интерфейс для выполнения действий над объектами Mython
 class Executable
 {
@@ -121,6 +127,7 @@ using String = ValueObject<std::string>;
 // Числовое значение
 using Number = ValueObject<int>;
 
+
 // Логическое значение
 class Bool : public ValueObject<bool>
 {
@@ -129,6 +136,7 @@ public:
 
     void Print(std::ostream& os, Context& context) override;
 };
+
 
 // Метод класса
 struct Method
@@ -140,6 +148,7 @@ struct Method
     // Тело метода
     std::unique_ptr<Executable> body;
 };
+
 
 // Класс
 class Class : public Object
@@ -158,6 +167,7 @@ public:
     // Выводит в os строку "Class <имя класса>", например "Class cat"
     void Print(std::ostream& os, Context& context) override;
 };
+
 
 // Экземпляр класса
 class ClassInstance : public Object
@@ -217,6 +227,7 @@ bool LessOrEqual(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& cont
 // Возвращает значение, противоположное Less(lhs, rhs, context)
 bool GreaterOrEqual(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context);
 
+
 // Контекст-заглушка, применяется в тестах.
 // В этом контексте весь вывод перенаправляется в строковый поток вывода output
 struct DummyContext : Context
@@ -228,6 +239,7 @@ struct DummyContext : Context
 
     std::ostringstream output;
 };
+
 
 // Простой контекст, в нём вывод происходит в поток output, переданный в конструктор
 class SimpleContext : public runtime::Context
