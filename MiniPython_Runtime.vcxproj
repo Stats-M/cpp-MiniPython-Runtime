@@ -145,6 +145,7 @@
     <ClCompile Include="runtime_test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClassDiagram.cd" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>

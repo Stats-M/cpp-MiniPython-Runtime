@@ -53,15 +53,35 @@ ObjectHolder::operator bool() const
     return Get() != nullptr;
 }
 
-bool IsTrue(const ObjectHolder& /*object*/)
+bool IsTrue(const ObjectHolder& object)
 {
-    // Заглушка. Реализуйте метод самостоятельно
+    // Сначала проверим саму ссылку
+    if (!object)
+    {
+        return false;
+    }
+
+    // Проверяем Value-типы. У нас это наследники класса ValueObject<T>
+    if (((object.TryAs<Number>() != nullptr) && (object.TryAs<Number>()->GetValue() != 0))    // если object это Number и не ноль
+        || ((object.TryAs<Bool>() != nullptr) && (object.TryAs<Bool>()->GetValue() == true))    //  если object это Bool и == true
+        || ((object.TryAs<String>() != nullptr) && (object.TryAs<String>()->GetValue().size() != 0)))   // если object - не пустая строка
+    {
+        return true;
+    }
+
+    // Во всех остальных случаях возвращаем false
     return false;
 }
 
-void ClassInstance::Print(std::ostream& /*os*/, Context& /*context*/)
+void ClassInstance::Print(std::ostream& os, Context& context)
 {
+    using namespace std::string_literals;
+
     // Заглушка, реализуйте метод самостоятельно
+    if (this->HasMethod("__str__"s, 0))
+    {
+        //os << this->Call("__str__"s, {}, context);
+    }
 }
 
 bool ClassInstance::HasMethod(const std::string& /*method*/, size_t /*argument_count*/) const
@@ -87,9 +107,9 @@ ClassInstance::ClassInstance(const Class& /*cls*/)
     // Реализуйте метод самостоятельно
 }
 
-ObjectHolder ClassInstance::Call(const std::string& /*method*/,
-                                 const std::vector<ObjectHolder>& /*actual_args*/,
-                                 Context& /*context*/)
+ObjectHolder ClassInstance::Call(const std::string& method,
+                                 const std::vector<ObjectHolder>& actual_args,
+                                 Context& context)
 {
     // Заглушка. Реализуйте метод самостоятельно.
     throw std::runtime_error("Not implemented"s);
