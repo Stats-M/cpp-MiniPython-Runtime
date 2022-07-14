@@ -3,6 +3,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -80,6 +81,7 @@ public:
     explicit operator bool() const;
 
 private:
+    // Private конструктор, принимает shared указатель на Object
     explicit ObjectHolder(std::shared_ptr<Object> data);
     void AssertIsValid() const;
 
@@ -110,7 +112,9 @@ private:
     T value_;
 };
 
-// Таблица символов, связывающая имя объекта с его значением
+// Таблица символов, связывающая имя объекта Mython программы с его значением
+// Имя объекта Mython программы - название переменной, имя поля класса и т.п.
+// Значение - экземпляр ObjectHolder, хранящий shared_ptr на значение объекта Mython в памяти
 using Closure = std::unordered_map<std::string, ObjectHolder>;
 
 // Проверяет, содержится ли в object значение, приводимое к True
@@ -128,13 +132,12 @@ public:
     virtual ObjectHolder Execute(Closure& closure, Context& context) = 0;
 };
 
-// Строковое значение
+// Строковое значение как составная единица программы на Mython (наследник от Object)
 using String = ValueObject<std::string>;
-// Числовое значение
+// Числовое значение как составная единица программы на Mython (наследник от Object)
 using Number = ValueObject<int>;
 
-
-// Логическое значение
+// Логическое значение как составная единица программы на Mython (наследник от Object)
 class Bool : public ValueObject<bool>
 {
 public:
@@ -144,7 +147,10 @@ public:
 };
 
 
-// Метод класса
+// Метод класса (составной единицы программы на Mython).
+// В Mython все методы - виртуальные, вызов производится 
+// в зависимости от типа вызываюшего класса Class по таблице 
+// виртуальных функций (Closure) экземпляра класса ClassInstance
 struct Method
 {
     // Имя метода
@@ -155,13 +161,18 @@ struct Method
     std::unique_ptr<Executable> body;
 };
 
+// Таблица виртуальных методов Mython класса. 
+using VFTable = std::unordered_map<std::string_view, const Method*>;
 
-// Класс
+// Класс как составная единица программы на Mython (наследник от Object)
+// Все методы в Mython виртуальные, поэтому при наличии
+// родительского класса конструктор должен склеить твблицы
+// методов methods родителя и конструируемого дочернего класса.
 class Class : public Object
 {
 public:
-    // Создаёт класс с именем name и набором методов methods, унаследованный от класса parent
-    // Если parent равен nullptr, то создаётся базовый класс
+    // Создаёт Mython класс Class с именем name и набором методов methods, унаследованный от класса parent
+    // Если parent равен nullptr, то создаётся базовый класс и склейки таблиц методов не происходит
     explicit Class(std::string name, std::vector<Method> methods, const Class* parent);
 
     // Возвращает указатель на метод name или nullptr, если метод с таким именем отсутствует
@@ -172,10 +183,16 @@ public:
 
     // Выводит в os строку "Class <имя класса>", например "Class cat"
     void Print(std::ostream& os, Context& context) override;
+
+private:
+    std::string name_{};             // Параметр explicit конструктора - имя класса в Mython программе
+    std::vector<Method> methods_{};  // Параметр explicit конструктора - собственные методы класса
+    const Class* parent_;            // Параметр explicit конструктора - родительский класс в Mython программе
+    VFTable vftable_{};    // Таблица виртуальных функций класса в Mython программе (комбинирование методов родительского класса и своих)
 };
 
 
-// Экземпляр класса
+// Экземпляр класса Mython программы
 class ClassInstance : public Object
 {
 public:
@@ -229,6 +246,9 @@ bool LessOrEqual(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& cont
 // Возвращает значение, противоположное Less(lhs, rhs, context)
 bool GreaterOrEqual(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context);
 
+
+//////////////////////////////////////////////
+// Контексты
 
 // Контекст-заглушка, применяется в тестах.
 // В этом контексте весь вывод перенаправляется в строковый поток вывода output

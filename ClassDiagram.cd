@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
-  <Comment CommentText="Интерфейс для выполнения действий над элементами Mython">
-    <Position X="0.75" Y="3.083" Height="0.635" Width="1.794" />
+  <Comment CommentText="Интерфейс для выполнения действий над элементами семантическим анализатором Mython">
+    <Position X="0.719" Y="2.938" Height="0.802" Width="1.835" />
   </Comment>
   <Comment CommentText="Класс-обертка для хранения элементов Object в Mython программе">
     <Position X="7.177" Y="0.521" Height="0.75" Width="1.815" />
@@ -58,7 +58,7 @@
   <Class Name="runtime::Class" Collapsed="true">
     <Position X="5" Y="2" Width="1.75" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAACAAAAAAAIAAAAAAAAAAAAAAAAAAAAEBAA=</HashCode>
+      <HashCode>AAAAoAAAAACAAAAAAAIAAAAAAAAAAAAAAAAAAAAEJAA=</HashCode>
       <FileName>runtime.h</FileName>
     </TypeIdentifier>
   </Class>
