@@ -1,4 +1,4 @@
-#include "runtime.h"
+п»ї#include "runtime.h"
 
 #include <cassert>
 #include <optional>
@@ -20,7 +20,7 @@ void ObjectHolder::AssertIsValid() const
 
 ObjectHolder ObjectHolder::Share(Object& object)
 {
-    // Возвращаем невладеющий shared_ptr (его deleter ничего не делает)
+    // Р’РѕР·РІСЂР°С‰Р°РµРј РЅРµРІР»Р°РґРµСЋС‰РёР№ shared_ptr (РµРіРѕ deleter РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµС‚)
     return ObjectHolder(std::shared_ptr<Object>(&object, [](auto* /*p*/)
                                                 { /* do nothing */
                                                 }));
@@ -55,72 +55,121 @@ ObjectHolder::operator bool() const
 
 bool IsTrue(const ObjectHolder& object)
 {
-    // Сначала проверим саму ссылку
+    // РЎРЅР°С‡Р°Р»Р° РїСЂРѕРІРµСЂРёРј СЃР°РјСѓ СЃСЃС‹Р»РєСѓ
     if (!object)
     {
         return false;
     }
 
-    // Проверяем Value-типы. У нас это наследники класса ValueObject<T>
-    if (((object.TryAs<Number>() != nullptr) && (object.TryAs<Number>()->GetValue() != 0))    // если object это Number и не ноль
-        || ((object.TryAs<Bool>() != nullptr) && (object.TryAs<Bool>()->GetValue() == true))    //  если object это Bool и == true
-        || ((object.TryAs<String>() != nullptr) && (object.TryAs<String>()->GetValue().size() != 0)))   // если object - не пустая строка
+    // РџСЂРѕРІРµСЂСЏРµРј Value-С‚РёРїС‹. РЈ РЅР°СЃ СЌС‚Рѕ РЅР°СЃР»РµРґРЅРёРєРё РєР»Р°СЃСЃР° ValueObject<T>
+    if (((object.TryAs<Number>() != nullptr) && (object.TryAs<Number>()->GetValue() != 0))    // РµСЃР»Рё object СЌС‚Рѕ Number Рё РЅРµ РЅРѕР»СЊ
+        || ((object.TryAs<Bool>() != nullptr) && (object.TryAs<Bool>()->GetValue() == true))    //  РµСЃР»Рё object СЌС‚Рѕ Bool Рё == true
+        || ((object.TryAs<String>() != nullptr) && (object.TryAs<String>()->GetValue().size() != 0)))   // РµСЃР»Рё object - РЅРµ РїСѓСЃС‚Р°СЏ СЃС‚СЂРѕРєР°
     {
         return true;
     }
 
-    // Во всех остальных случаях возвращаем false
+    // Р’Рѕ РІСЃРµС… РѕСЃС‚Р°Р»СЊРЅС‹С… СЃР»СѓС‡Р°СЏС… РІРѕР·РІСЂР°С‰Р°РµРј false
     return false;
 }
 
 void ClassInstance::Print(std::ostream& os, Context& context)
 {
-    using namespace std::string_literals;
-
-    // Заглушка, реализуйте метод самостоятельно
-    if (this->HasMethod("__str__"s, 1))
+    // Р•СЃР»Рё РµСЃС‚СЊ РјРµС‚РѕРґ __str__ Сѓ РѕР±СЉРµРєС‚Р°, РёСЃРїРѕР»СЊР·СѓРј РµРіРѕ
+    if (this->HasMethod("__str__"s, 0))
     {
-        //os << this->Call("__str__"s, {}, context);
+        // РџРѕР»СѓС‡РµРј ObjectHolder* Рё РІС‹Р·С‹РІР°РµРј РµРіРѕ Print РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ С‚РёРїР° Р·РЅР°С‡РµРЅРёСЏ
+        this->Call("__str__"s, {}, context)->Print(os, context);
+    }
+    else
+    {
+        // Р’С‹РІРѕРґРёРј РїСЂРѕСЃС‚Рѕ Р°РґСЂРµСЃ РѕР±СЉРµРєС‚Р°
+        os << this;
     }
 }
 
-bool ClassInstance::HasMethod(const std::string& /*method*/, size_t /*argument_count*/) const
+bool ClassInstance::HasMethod(const std::string& method, size_t argument_count) const
 {
-    // Заглушка, реализуйте метод самостоятельно
+    // РџСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё РІ С‚Р°Р±Р»РёС†Рµ РІРёСЂС‚СѓР°Р»СЊРЅС‹С… РјРµС‚РѕРґРѕРІ РјРµС‚РѕРґ СЃ РёРјРµРЅРµРј method
+    auto method_ptr = cls_.GetMethod(method);
+    if (method_ptr != nullptr)
+    {
+        // РџСЂРѕРІРµСЂСЏРµРј СЃРѕРІРїР°РґРµРЅРёРµ С‡РёСЃР»Р° Р°СЂРіСѓРјРµРЅС‚РѕРІ
+        if (method_ptr->formal_params.size() == argument_count)
+        {
+            return true;
+        }
+    }
+    
     return false;
 }
 
 Closure& ClassInstance::Fields()
 {
-    // Заглушка. Реализуйте метод самостоятельно
-    throw std::logic_error("Not implemented"s);
+    return fields_;
 }
 
 const Closure& ClassInstance::Fields() const
 {
-    // Заглушка. Реализуйте метод самостоятельно
-    throw std::logic_error("Not implemented"s);
+    return fields_;
 }
 
-ClassInstance::ClassInstance(const Class& /*cls*/)
-{
-    // Реализуйте метод самостоятельно
-}
+ClassInstance::ClassInstance(const Class& cls)
+    :cls_(cls)
+{}
 
 ObjectHolder ClassInstance::Call(const std::string& method,
                                  const std::vector<ObjectHolder>& actual_args,
                                  Context& context)
 {
-    // Заглушка. Реализуйте метод самостоятельно.
-    throw std::runtime_error("Not implemented"s);
+    if (this->HasMethod(method, actual_args.size()))
+    {
+        // РќРµСЏРІРЅС‹Р№ РїР°СЂР°РјРµС‚СЂ РІСЃРµС… РјРµС‚РѕРґРѕРІ РІ Mython вЂ” СЃРїРµС†РёР°Р»СЊРЅС‹Р№ 
+        // РїР°СЂР°РјРµС‚СЂ self, Р°РЅР°Р»РѕРі СѓРєР°Р·Р°С‚РµР»СЏ this РІ C++. РџР°СЂР°РјРµС‚СЂ self 
+        // СЃСЃС‹Р»Р°РµС‚СЃСЏ РЅР° С‚РµРєСѓС‰РёР№ РѕР±СЉРµРєС‚ РєР»Р°СЃСЃР°.
+        // РџРѕР»СЏ РЅРµ РѕР±СЉСЏРІР»СЏСЋС‚СЃСЏ Р·Р°СЂР°РЅРµРµ, Р° РґРѕР±Р°РІР»СЏСЋС‚СЃСЏ РІ РѕР±СЉРµРєС‚ РєР»Р°СЃСЃР° 
+        // РїСЂРё РїРµСЂРІРѕРј РїСЂРёСЃРІР°РёРІР°РЅРёРё. РџРѕСЌС‚РѕРјСѓ РѕР±СЂР°С‰РµРЅРёСЏ Рє РїРѕР»СЏРј РєР»Р°СЃСЃР° РІСЃРµРіРґР°
+        // РЅР°РґРѕ РЅР°С‡РёРЅР°С‚СЊ СЃ self., С‡С‚РѕР±С‹ РѕС‚Р»РёС‡Р°С‚СЊ РёС… РѕС‚ Р»РѕРєР°Р»СЊРЅС‹С… РїРµСЂРµРјРµРЅРЅС‹С….
+        // Share() РїСЂРёРјРµРЅСЏРµС‚СЃСЏ РґР»СЏ РїРµСЂРµРґР°С‡Рё self РїСЂРё РІС‹Р·РѕРІРµ РјРµС‚РѕРґРѕРІ.
+        Closure closure = { {"self", ObjectHolder::Share(*this)} };
+
+        // РџРѕР»СѓС‡Р°РµРј СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РјРµС‚РѕРґ РёР· С‚Р°Р±Р»РёС†С‹ РІРёСЂС‚СѓР°Р»СЊРЅС‹С… С„СѓРЅРєС†РёР№
+        auto method_ptr = cls_.GetMethod(method);
+
+        // РџРѕ РѕС‡РµСЂРµРґРё С‡РёС‚Р°РµРј РёРјРµРЅР° С„РѕСЂРјР°Р»СЊРЅС‹С… РїР°СЂР°РјРµС‚СЂРѕРІ Рё СЃРѕРїРѕСЃС‚Р°РІР»СЏРµРј
+        // РёРј РѕС‡РµСЂРµРґРЅРѕР№ С„Р°РєС‚РёС‡РµСЃРєРёР№ Р°СЂРіСѓРјРµРЅС‚ РёР· РїР°СЂР°РјРµСЂРѕРІ.
+        // РџРѕР»СѓС‡Р°РµРј Р·Р°РїРёСЃСЊ СЃР»РѕРІР°СЂСЏ Closure РІРёРґР° "РёРјСЏ_РїР°СЂР°РјРµС‚СЂР° = Р·РЅР°С‡РµРЅРёРµ_РїР°СЂР°РјРµС‚СЂР°"
+        for (size_t i = 0; i < method_ptr->formal_params.size(); ++i)
+        {
+            std::string arg = method_ptr->formal_params[i];
+            closure[arg] = actual_args[i];
+        }
+        // РС‚РѕРіРѕ Р»РѕРєР°Р»СЊРЅР°СЏ closure СЃРѕРґРµСЂР¶РёС‚ РІСЃРµ Р°СЂРіСѓРјРµРЅС‚С‹ РїР»СЋСЃ СЃСЃС‹Р»РєР° РЅР° self РґР»СЏ РґРѕСЃС‚СѓРїР° Рє fields_
+
+        //method_ptr->body->Execute(fields_, context); // Closure С‚СѓС‚ РЅСѓР¶РЅРѕ РїРµСЂРµРґР°РІР°С‚СЊ РґРѕРїРѕР»РЅРµРЅРЅСѓСЋ Р»РѕРєР°Р»СЊРЅСѓСЋ
+        return method_ptr->body->Execute(closure, context);
+
+        // Р”РѕРїРѕР»РёС‚РµР»СЊРЅР°СЏ РёРЅС„РѕСЂРјР°С†РёСЏ:
+        // РњРµС‚РѕРґ - СЃС‚СЂСѓРєС‚СѓСЂР°, СЃРѕРґРµСЂР¶Р°С‰Р°СЏ std::unique_ptr<Executable> body, Рё РІС‹Р·РѕРІ РјРµС‚РѕРґР° 
+        // СЌРєРІРёРІР°Р»РµРЅС‚РµРЅ РІС‹Р·РѕРІСѓ body->Execute(closure, context), С‚.Рµ. РµРјСѓ РЅСѓР¶РЅРѕ СЃРєРѕСЂРјРёС‚СЊ РЅРµРєСѓСЋ 
+        // Closure. Closure РёР· ClassInstance СЃРѕРґРµСЂР¶РёС‚ С‚РѕР»СЊРєРѕ РїРѕР»СЏ, Рє РЅРёРј РґРѕСЃС‚СѓРї Р±СѓРґРµС‚ 
+        // С‡РµСЂРµР· self - СЌС‚Рѕ РѕСЃРѕР±РµРЅРЅРѕСЃС‚СЊ РџРёС‚РѕРЅР°, РµСЃР»Рё РїСЂРѕСЃС‚Рѕ РїРѕРґР°С‚СЊ РЅР° РІС…РѕРґ РјРµС‚РѕРґР° РїРѕР»СЏ, 
+        // С‚Рѕ СЌС‚Рѕ РЅРµ СЃСЂР°Р±РѕС‚Р°РµС‚. РќРѕ РїРѕРјРёРјРѕ РїРѕР»РµР№ РЅР°Рј РЅСѓР¶РЅС‹ РµС‰Рµ Рё Р°СЂРіСѓРјРµРЅС‚С‹, РєРѕС‚РѕСЂС‹Рµ РјРѕРіСѓС‚ 
+        // РЅРµ Р·Р°РІРёСЃРµС‚СЊ РѕС‚ РїРѕР»РµР№ РІРѕРѕР±С‰Рµ Рё СЃР°Рј СЌРєР·РµРјРїР»СЏСЂ РєР»Р°СЃСЃР° РїСЂРѕ РЅРёС… Р·РЅР°С‚СЊ РЅРµ РґРѕР»Р¶РµРЅ. 
+        // РџРѕСЌС‚РѕРјСѓ Closure Р·РґРµСЃСЊ РЅСѓР¶РЅР° СЃРІРѕСЏ.
+    }
+    else
+    {
+        throw std::runtime_error("Call for a not defined method"s);
+    }
 }
 
 Class::Class(std::string name, std::vector<Method> methods, const Class* parent)
     : name_(std::move(name)), methods_(std::move(methods)), parent_(std::move(parent))
 {
-    // Реализуем механизм виртуальных функций для Mython классов
+    // Р РµР°Р»РёР·СѓРµРј РјРµС…Р°РЅРёР·Рј РІРёСЂС‚СѓР°Р»СЊРЅС‹С… С„СѓРЅРєС†РёР№ РґР»СЏ Mython РєР»Р°СЃСЃРѕРІ
 
-    // Сначала запомним в таблице виртуальных функций методы родителя, если он есть
+    // РЎРЅР°С‡Р°Р»Р° Р·Р°РїРѕРјРЅРёРј РІ С‚Р°Р±Р»РёС†Рµ РІРёСЂС‚СѓР°Р»СЊРЅС‹С… С„СѓРЅРєС†РёР№ РјРµС‚РѕРґС‹ СЂРѕРґРёС‚РµР»СЏ, РµСЃР»Рё РѕРЅ РµСЃС‚СЊ
     if (parent_ != nullptr)
     {
         for (const auto& parent_method : parent_->methods_)
@@ -129,9 +178,9 @@ Class::Class(std::string name, std::vector<Method> methods, const Class* parent)
         }
     }
 
-    // Теперь поместим в таблицу виртуальных функций собственные методы класса.
-    // Если таблица уже содержит методы родителя, методы с одинаковыми именами
-    // будут перезаписаны адресами дочерних методов.
+    // РўРµРїРµСЂСЊ РїРѕРјРµСЃС‚РёРј РІ С‚Р°Р±Р»РёС†Сѓ РІРёСЂС‚СѓР°Р»СЊРЅС‹С… С„СѓРЅРєС†РёР№ СЃРѕР±СЃС‚РІРµРЅРЅС‹Рµ РјРµС‚РѕРґС‹ РєР»Р°СЃСЃР°.
+    // Р•СЃР»Рё С‚Р°Р±Р»РёС†Р° СѓР¶Рµ СЃРѕРґРµСЂР¶РёС‚ РјРµС‚РѕРґС‹ СЂРѕРґРёС‚РµР»СЏ, РјРµС‚РѕРґС‹ СЃ РѕРґРёРЅР°РєРѕРІС‹РјРё РёРјРµРЅР°РјРё
+    // Р±СѓРґСѓС‚ РїРµСЂРµР·Р°РїРёСЃР°РЅС‹ Р°РґСЂРµСЃР°РјРё РґРѕС‡РµСЂРЅРёС… РјРµС‚РѕРґРѕРІ.
     for (const auto& method : methods_)
     {
         vftable_[method.name] = &method;
@@ -140,24 +189,26 @@ Class::Class(std::string name, std::vector<Method> methods, const Class* parent)
 
 const Method* Class::GetMethod(const std::string& name) const
 {
-    // Ищем метод в виртуальной таблице
+    // РС‰РµРј РјРµС‚РѕРґ РІ РІРёСЂС‚СѓР°Р»СЊРЅРѕР№ С‚Р°Р±Р»РёС†Рµ
     if (vftable_.count(name) != 0)
     {
         return vftable_.at(name);
     }
 
-    // Такого метода в виртуальной таблице нет
+    // РўР°РєРѕРіРѕ РјРµС‚РѕРґР° РІ РІРёСЂС‚СѓР°Р»СЊРЅРѕР№ С‚Р°Р±Р»РёС†Рµ РЅРµС‚
     return nullptr;
 }
 
-[[nodiscard]] inline const std::string& Class::GetName() const
+//[[nodiscard]] inline const std::string& Class::GetName() const
+[[nodiscard]] const std::string& Class::GetName() const
 {
     return name_;
 }
 
-void Class::Print(ostream& os, Context& context)
+void Class::Print(ostream& os, [[maybe_unused]] Context& context)
 {
-    os << "Class "sv << this->GetName();
+    //os << "Class "sv << this->GetName();
+    os << "Class "sv << GetName();
 }
 
 void Bool::Print(std::ostream& os, [[maybe_unused]] Context& context)
@@ -167,20 +218,20 @@ void Bool::Print(std::ostream& os, [[maybe_unused]] Context& context)
 
 
 //////////////////////////////////////////////
-// Функции сравнения объектов Mython программы
+// Р¤СѓРЅРєС†РёРё СЃСЂР°РІРЅРµРЅРёСЏ РѕР±СЉРµРєС‚РѕРІ Mython РїСЂРѕРіСЂР°РјРјС‹
 
 bool Equal(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
 {
-    // 1. Если lhs и rhs имеют значение None, функция возвращает true.
-    // operator bool() проверяет внутренний shared_ptr на != nullptr
-    // Значение None противоположно оператору bool()
+    // 1. Р•СЃР»Рё lhs Рё rhs РёРјРµСЋС‚ Р·РЅР°С‡РµРЅРёРµ None, С„СѓРЅРєС†РёСЏ РІРѕР·РІСЂР°С‰Р°РµС‚ true.
+    // operator bool() РїСЂРѕРІРµСЂСЏРµС‚ РІРЅСѓС‚СЂРµРЅРЅРёР№ shared_ptr РЅР° != nullptr
+    // Р—РЅР°С‡РµРЅРёРµ None РїСЂРѕС‚РёРІРѕРїРѕР»РѕР¶РЅРѕ РѕРїРµСЂР°С‚РѕСЂСѓ bool()
     if (!lhs && !rhs)
     {
         return true;
     }
 
-    // 2. Возвращает true, если lhs и rhs содержат одинаковые числа, строки или значения типа Bool.
-    // Проверяем Value-типы Mython. У нас это наследники класса ValueObject<T>
+    // 2. Р’РѕР·РІСЂР°С‰Р°РµС‚ true, РµСЃР»Рё lhs Рё rhs СЃРѕРґРµСЂР¶Р°С‚ РѕРґРёРЅР°РєРѕРІС‹Рµ С‡РёСЃР»Р°, СЃС‚СЂРѕРєРё РёР»Рё Р·РЅР°С‡РµРЅРёСЏ С‚РёРїР° Bool.
+    // РџСЂРѕРІРµСЂСЏРµРј Value-С‚РёРїС‹ Mython. РЈ РЅР°СЃ СЌС‚Рѕ РЅР°СЃР»РµРґРЅРёРєРё РєР»Р°СЃСЃР° ValueObject<T>
     {
         auto lhs_ptr = lhs.TryAs<Number>();
         auto rhs_ptr = rhs.TryAs<Number>();
@@ -188,7 +239,7 @@ bool Equal(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
         {
             return lhs_ptr->GetValue() == rhs_ptr->GetValue();
         }
-        //else разные типы, ничего не делаем, проверяем дальше
+        //else СЂР°Р·РЅС‹Рµ С‚РёРїС‹, РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј, РїСЂРѕРІРµСЂСЏРµРј РґР°Р»СЊС€Рµ
     }
 
     {
@@ -198,7 +249,7 @@ bool Equal(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
         {
             return lhs_ptr->GetValue() == rhs_ptr->GetValue();
         }
-        //else разные типы, ничего не делаем, проверяем дальше
+        //else СЂР°Р·РЅС‹Рµ С‚РёРїС‹, РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј, РїСЂРѕРІРµСЂСЏРµРј РґР°Р»СЊС€Рµ
     }
 
     {
@@ -208,11 +259,11 @@ bool Equal(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
         {
             return lhs_ptr->GetValue() == rhs_ptr->GetValue();
         }
-        //else разные типы, ничего не делаем, проверяем дальше
+        //else СЂР°Р·РЅС‹Рµ С‚РёРїС‹, РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј, РїСЂРѕРІРµСЂСЏРµРј РґР°Р»СЊС€Рµ
     }
 
-    // 3. Если lhs - объект с методом __eq__, функция возвращает результат 
-    //    вызова lhs.__eq__(rhs), приведённый к типу Bool.
+    // 3. Р•СЃР»Рё lhs - РѕР±СЉРµРєС‚ СЃ РјРµС‚РѕРґРѕРј __eq__, С„СѓРЅРєС†РёСЏ РІРѕР·РІСЂР°С‰Р°РµС‚ СЂРµР·СѓР»СЊС‚Р°С‚ 
+    //    РІС‹Р·РѕРІР° lhs.__eq__(rhs), РїСЂРёРІРµРґС‘РЅРЅС‹Р№ Рє С‚РёРїСѓ Bool.
     {
         auto lhs_ptr = lhs.TryAs<ClassInstance>();
         if (lhs_ptr != nullptr)
@@ -225,16 +276,16 @@ bool Equal(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
         }
     }
 
-    // 4. В остальных случаях функция выбрасывает исключение runtime_error.
+    // 4. Р’ РѕСЃС‚Р°Р»СЊРЅС‹С… СЃР»СѓС‡Р°СЏС… С„СѓРЅРєС†РёСЏ РІС‹Р±СЂР°СЃС‹РІР°РµС‚ РёСЃРєР»СЋС‡РµРЅРёРµ runtime_error.
     throw std::runtime_error("Cannot compare objects for equality"s);
 }
 
 
 bool Less(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
 {
-    // 1. Если lhs и rhs - числа, строки или значения bool, функция
-    // возвращает результат их сравнения оператором <
-    // Проверяем Value-типы Mython. У нас это наследники класса ValueObject<T>
+    // 1. Р•СЃР»Рё lhs Рё rhs - С‡РёСЃР»Р°, СЃС‚СЂРѕРєРё РёР»Рё Р·РЅР°С‡РµРЅРёСЏ bool, С„СѓРЅРєС†РёСЏ
+    // РІРѕР·РІСЂР°С‰Р°РµС‚ СЂРµР·СѓР»СЊС‚Р°С‚ РёС… СЃСЂР°РІРЅРµРЅРёСЏ РѕРїРµСЂР°С‚РѕСЂРѕРј <
+    // РџСЂРѕРІРµСЂСЏРµРј Value-С‚РёРїС‹ Mython. РЈ РЅР°СЃ СЌС‚Рѕ РЅР°СЃР»РµРґРЅРёРєРё РєР»Р°СЃСЃР° ValueObject<T>
     {
         auto lhs_ptr = lhs.TryAs<Number>();
         auto rhs_ptr = rhs.TryAs<Number>();
@@ -242,7 +293,7 @@ bool Less(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
         {
             return lhs_ptr->GetValue() < rhs_ptr->GetValue();
         }
-        //else разные типы, ничего не делаем, проверяем дальше
+        //else СЂР°Р·РЅС‹Рµ С‚РёРїС‹, РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј, РїСЂРѕРІРµСЂСЏРµРј РґР°Р»СЊС€Рµ
     }
 
     {
@@ -252,7 +303,7 @@ bool Less(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
         {
             return lhs_ptr->GetValue() < rhs_ptr->GetValue();
         }
-        //else разные типы, ничего не делаем, проверяем дальше
+        //else СЂР°Р·РЅС‹Рµ С‚РёРїС‹, РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј, РїСЂРѕРІРµСЂСЏРµРј РґР°Р»СЊС€Рµ
     }
 
     {
@@ -262,11 +313,11 @@ bool Less(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
         {
             return lhs_ptr->GetValue() < rhs_ptr->GetValue();
         }
-        //else разные типы, ничего не делаем, проверяем дальше
+        //else СЂР°Р·РЅС‹Рµ С‚РёРїС‹, РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј, РїСЂРѕРІРµСЂСЏРµРј РґР°Р»СЊС€Рµ
     }
 
-    // 2. Если lhs - объект с методом __lt__, возвращает результат
-    //  вызова lhs.__lt__(rhs), приведённый к типу bool
+    // 2. Р•СЃР»Рё lhs - РѕР±СЉРµРєС‚ СЃ РјРµС‚РѕРґРѕРј __lt__, РІРѕР·РІСЂР°С‰Р°РµС‚ СЂРµР·СѓР»СЊС‚Р°С‚
+    //  РІС‹Р·РѕРІР° lhs.__lt__(rhs), РїСЂРёРІРµРґС‘РЅРЅС‹Р№ Рє С‚РёРїСѓ bool
     {
         auto lhs_ptr = lhs.TryAs<ClassInstance>();
         if (lhs_ptr != nullptr)
@@ -279,7 +330,7 @@ bool Less(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
         }
     }
 
-    // 3. В остальных случаях функция выбрасывает исключение runtime_error.
+    // 3. Р’ РѕСЃС‚Р°Р»СЊРЅС‹С… СЃР»СѓС‡Р°СЏС… С„СѓРЅРєС†РёСЏ РІС‹Р±СЂР°СЃС‹РІР°РµС‚ РёСЃРєР»СЋС‡РµРЅРёРµ runtime_error.
     throw std::runtime_error("Cannot compare objects for less"s);
 }
 
@@ -288,22 +339,19 @@ bool NotEqual(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context
     return !Equal(lhs, rhs, context);
 }
 
-bool Greater(const ObjectHolder& /*lhs*/, const ObjectHolder& /*rhs*/, Context& /*context*/)
+bool Greater(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
 {
-    // Заглушка. Реализуйте функцию самостоятельно
-    throw std::runtime_error("Cannot compare objects for equality"s);
+    return !(Less(lhs, rhs, context) || Equal(lhs, rhs, context));
 }
 
-bool LessOrEqual(const ObjectHolder& /*lhs*/, const ObjectHolder& /*rhs*/, Context& /*context*/)
+bool LessOrEqual(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
 {
-    // Заглушка. Реализуйте функцию самостоятельно
-    throw std::runtime_error("Cannot compare objects for equality"s);
+    return Less(lhs, rhs, context) || Equal(lhs, rhs, context);
 }
 
-bool GreaterOrEqual(const ObjectHolder& /*lhs*/, const ObjectHolder& /*rhs*/, Context& /*context*/)
+bool GreaterOrEqual(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
 {
-    // Заглушка. Реализуйте функцию самостоятельно
-    throw std::runtime_error("Cannot compare objects for equality"s);
+    return !Less(lhs, rhs, context);
 }
 
 }  // namespace runtime

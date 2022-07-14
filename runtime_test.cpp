@@ -505,8 +505,6 @@ void TestComparison()
 
 void TestClass()
 {
-    throw;
-    /*
     vector<Method> methods;
     Closure* passed_closure = nullptr;
     Context* passed_context = nullptr;
@@ -535,14 +533,10 @@ void TestClass()
     cls.Print(out, ctx);
     ASSERT(ctx.output.str().empty());
     ASSERT_EQUAL(out.str(), "Class Test"s);
-    */
 }
 
 void TestClassInstance()
 {
-    throw;
-
-    /*
     vector<Method> methods;
 
     Closure passed_closure;
@@ -566,7 +560,6 @@ void TestClassInstance()
     ASSERT_EQUAL(out.str(), "result"s);
 
     ASSERT_THROWS(instance.Call("missing_method"s, {}, ctx), runtime_error);
-    */
 }
 
 }  // namespace
@@ -579,9 +572,8 @@ void RunObjectsTests(TestRunner& tr)
     RUN_TEST(tr, runtime::TestMethodInvocation);
     RUN_TEST(tr, runtime::TestIsTrue);
     RUN_TEST(tr, runtime::TestComparison);
-    throw;
-    //RUN_TEST(tr, runtime::TestClass);
-    //RUN_TEST(tr, runtime::TestClassInstance);
+    RUN_TEST(tr, runtime::TestClass);
+    RUN_TEST(tr, runtime::TestClassInstance);
 }
 
 void RunObjectHolderTests(TestRunner& tr)
